@@ -63,6 +63,11 @@ function nql:__init(args)
     self.transition_params = args.transition_params or {}
 
     self.network    = args.network or self:createNetwork()
+    -- for reward normalization
+    self.reward_normalize = args.reward_normalize
+    self.rescale_r      = nil
+    -- use only local max (increase lambda for global max reward usage)
+    self.lambda = 0
 
     -- check whether there is a network file
     local network_function
@@ -207,7 +212,7 @@ function nql:getQUpdate(args)
     q2 = q2_max:clone():mul(self.discount):cmul(term)
 
     delta = r:clone():float()
-
+    -- scalling hear, should be ignored
     if self.rescale_r then
         delta:div(self.r_max)
     end
@@ -243,16 +248,20 @@ function nql:qLearnMinibatch()
     assert(self.transitions:size() > self.minibatch_size)
 
     local s, a, r, s2, term = self.transitions:sample(self.minibatch_size)
+
     -- normalize reward
-    local max_r = math.max(unpack(r))
-    for i=0,#r
-        do
-        if r[i]~= nil and r[i] > 0 then r[i] = r[i]/max_r
+    if self.reward_normalize
+
+        self.max_r = self.max_r*(1-self.lambda) + self.lambda*math.max(unpack(r))
+        for i=1,#r
+            do
+            if r[i] > 0 then r[i] = r[i]/max_r end
             end
-        end
+    end
 
     local targets, delta, q2_max = self:getQUpdate{s=s, a=a, r=r, s2=s2,
         term=term, update_qmax=true}
+
 
     -- zero gradients of parameters
     self.dw:zero()
