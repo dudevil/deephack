@@ -68,6 +68,7 @@ function nql:__init(args)
     self.rescale_r      = nil
     -- use only local max (increase lambda for global max reward usage)
     self.lambda = 0
+    self.max_r = 0
 
     -- check whether there is a network file
     local network_function
@@ -250,6 +251,7 @@ function nql:qLearnMinibatch()
     local s, a, r, s2, term = self.transitions:sample(self.minibatch_size)
 
     -- normalize reward
+
     if self.reward_normalize then
         self.max_r = self.max_r*(1-self.lambda) + self.lambda*math.max(unpack(r))
         for i=1,#r
