@@ -259,7 +259,6 @@ function nql:qLearnMinibatch()
             if r[i] > 0 then r[i] = r[i]/max_r end
             end
     end
-
     local targets, delta, q2_max = self:getQUpdate{s=s, a=a, r=r, s2=s2,
         term=term, update_qmax=true}
 
