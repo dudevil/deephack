@@ -253,7 +253,7 @@ function nql:qLearnMinibatch()
     -- normalize reward
 
     if self.reward_normalize then
-        self.max_r = self.max_r*(1-self.lambda) + self.lambda*math.max(unpack(r))
+        self.max_r = self.max_r*(1-self.lambda) + self.lambda*torch.max(r)
         for i=1,#r
             do
             if r[i] > 0 then r[i] = r[i]/max_r end
