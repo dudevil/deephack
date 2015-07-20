@@ -250,8 +250,7 @@ function nql:qLearnMinibatch()
     local s, a, r, s2, term = self.transitions:sample(self.minibatch_size)
 
     -- normalize reward
-    if self.reward_normalize
-
+    if self.reward_normalize then
         self.max_r = self.max_r*(1-self.lambda) + self.lambda*math.max(unpack(r))
         for i=1,#r
             do
