@@ -152,7 +152,7 @@ function nql:__init(args)
 
     if self.target_q then
         self.target_network = self.network:clone()
-        self.target_network:evaluating()
+        self.target_network:evaluate()
     end
 
     self.evaluating = false
