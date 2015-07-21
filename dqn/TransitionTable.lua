@@ -168,14 +168,14 @@ function trans:sample(batch_size)
     self.buf_ind = self.buf_ind+batch_size
     local range = {{index, index+batch_size-1}}
 
-    local buf_i, buf_s, buf_s2, buf_a, buf_r, buf_w, buf_term = self.buf_i, self.buf_s, self.buf_s2,
-        self.buf_a, self.buf_r, self.buf_w, self.buf_term
+    local buf_i, buf_s, buf_s2, buf_a, buf_r, buf_term = self.buf_i, self.buf_s, self.buf_s2,
+        self.buf_a, self.buf_r, self.buf_term
     if self.gpu and self.gpu >=0  then
         buf_s = self.gpu_s
         buf_s2 = self.gpu_s2
     end
 
-    return buf_i[range], buf_s[range], buf_a[range], buf_r[range], buf_w[range], buf_s2[range], buf_term[range]
+    return buf_i[range], buf_s[range], buf_a[range], buf_r[range], buf_s2[range], buf_term[range]
 end
 
 
@@ -430,7 +430,6 @@ function trans:read(file)
 
     self.buf_a      = torch.LongTensor(self.bufferSize):fill(0)
     self.buf_r      = torch.zeros(self.bufferSize)
-    self.buf_w      = torch.FloatTensor(self.bufferSize)
     self.buf_term   = torch.ByteTensor(self.bufferSize):fill(0)
     self.buf_s      = torch.ByteTensor(self.bufferSize, self.stateDim * self.histLen):fill(0)
     self.buf_s2     = torch.ByteTensor(self.bufferSize, self.stateDim * self.histLen):fill(0)

@@ -63,6 +63,7 @@ function nql:__init(args)
     self.transition_params = args.transition_params or {}
 
     self.use_thompson = args.use_thompson or false
+    self.uncertainty_T = args.uncertainty_T or 5
 
     self.network    = args.network or self:createNetwork()
 
@@ -465,4 +466,19 @@ end
 function nql:report()
     print(get_weight_norms(self.network))
     print(get_grad_norms(self.network))
+end
+
+
+function nql:uncertainty(state, action_id)
+    if state:dim() == 2 then
+        assert(false, 'Input must be at least 3D')
+        state = state:resize(1, state:size(1), state:size(2))
+    end
+    if self.gpu >= 0 then
+        state = state:cuda()
+    end
+
+    for i=1,self.uncertainty_T do
+        self.network:forward(state)
+    end
 end
