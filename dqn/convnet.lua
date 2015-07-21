@@ -40,16 +40,18 @@ function create_network(args)
     net:add(nn.Reshape(nel))
 
     -- fully connected layer
+    net:add(nn.Dropout(0.2))
+
     net:add(nn.Linear(nel, args.n_hid[1]))
     net:add(args.nl())
     local last_layer_size = args.n_hid[1]
 
     for i=1,(#args.n_hid-1) do
         -- add Linear layer
-        net:add(nn.Dropout())
         last_layer_size = args.n_hid[i+1]
         net:add(nn.Linear(args.n_hid[i], last_layer_size))
         net:add(args.nl())
+        net:add(nn.Dropout(0.5))
     end
 
     -- add the last fully connected layer (to actions)
