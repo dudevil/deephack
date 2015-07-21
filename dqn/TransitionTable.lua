@@ -430,6 +430,7 @@ function trans:read(file)
 
     self.buf_a      = torch.LongTensor(self.bufferSize):fill(0)
     self.buf_r      = torch.zeros(self.bufferSize)
+    self.buf_w      = torch.FloatTensor(self.bufferSize)
     self.buf_term   = torch.ByteTensor(self.bufferSize):fill(0)
     self.buf_s      = torch.ByteTensor(self.bufferSize, self.stateDim * self.histLen):fill(0)
     self.buf_s2     = torch.ByteTensor(self.bufferSize, self.stateDim * self.histLen):fill(0)
