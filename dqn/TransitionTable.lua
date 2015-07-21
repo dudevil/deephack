@@ -78,8 +78,8 @@ function trans:__init(args)
         self.gpu_s2 = self.buf_s2:float():cuda()
     end
 	
-	self.threshold_estimator = frugal(100, 0.9)
-	self.weight_threshold = 100
+	self.threshold_estimator = frugal(0, 0.9)
+	self.weight_threshold = 0
 end
 
 
