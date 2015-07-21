@@ -5,6 +5,7 @@ See LICENSE file for full terms of limited license.
 ]]
 
 require 'image'
+require 'helpers'
 
 local trans = torch.class('dqn.TransitionTable')
 
@@ -54,6 +55,7 @@ function trans:__init(args)
     self.s = torch.ByteTensor(self.maxSize, self.stateDim):fill(0)
     self.a = torch.LongTensor(self.maxSize):fill(0)
     self.r = torch.zeros(self.maxSize)
+	self.w = torch.zeros(self.maxSize)
     self.t = torch.ByteTensor(self.maxSize):fill(0)
     self.action_encodings = torch.eye(self.numActions)
 
@@ -67,13 +69,17 @@ function trans:__init(args)
     self.buf_a      = torch.LongTensor(self.bufferSize):fill(0)
     self.buf_r      = torch.zeros(self.bufferSize)
     self.buf_term   = torch.ByteTensor(self.bufferSize):fill(0)
-    self.buf_s      = torch.ByteTensor(self.bufferSize, s_size):fill(0)
+    self.buf_i      = torch.LongTensor(self.bufferSize):fill(0)
+	self.buf_s      = torch.ByteTensor(self.bufferSize, s_size):fill(0)
     self.buf_s2     = torch.ByteTensor(self.bufferSize, s_size):fill(0)
 
     if self.gpu and self.gpu >= 0 then
         self.gpu_s  = self.buf_s:float():cuda()
         self.gpu_s2 = self.buf_s2:float():cuda()
     end
+	
+	self.threshold_estimator = frugal(100, 0.9)
+	self.weight_threshold = 100
 end
 
 
@@ -99,10 +105,11 @@ function trans:fill_buffer()
     self.buf_ind = 1
     local ind
     for buf_ind=1,self.bufferSize do
-        local s, a, r, s2, term = self:sample_one(1)
+        local index, s, a, r, s2, term = self:sample_one(1)
         self.buf_s[buf_ind]:copy(s)
         self.buf_a[buf_ind] = a
         self.buf_r[buf_ind] = r
+		self.buf_i[buf_ind] = index
         self.buf_s2[buf_ind]:copy(s2)
         self.buf_term[buf_ind] = term
     end
@@ -131,6 +138,10 @@ function trans:sample_one()
             -- Note that this is the terminal flag for s_{t+1}.
             valid = false
         end
+		w = self.w[index+self.recentMemSize-1]
+		if w < self.weight_threshold then
+			valid = false
+		end
         if self.nonEventProb < 1 and self.t[index+self.recentMemSize] == 0 and
             self.r[index+self.recentMemSize-1] == 0 and
             torch.uniform() > self.nonTermProb then
@@ -157,14 +168,14 @@ function trans:sample(batch_size)
     self.buf_ind = self.buf_ind+batch_size
     local range = {{index, index+batch_size-1}}
 
-    local buf_s, buf_s2, buf_a, buf_r, buf_term = self.buf_s, self.buf_s2,
-        self.buf_a, self.buf_r, self.buf_term
+    local buf_i, buf_s, buf_s2, buf_a, buf_r, buf_w, buf_term = self.buf_i, self.buf_s, self.buf_s2,
+        self.buf_a, self.buf_r, self.buf_w, self.buf_term
     if self.gpu and self.gpu >=0  then
         buf_s = self.gpu_s
         buf_s2 = self.gpu_s2
     end
 
-    return buf_s[range], buf_a[range], buf_r[range], buf_s2[range], buf_term[range]
+    return buf_i[range], buf_s[range], buf_a[range], buf_r[range], buf_w[range], buf_s2[range], buf_term[range]
 end
 
 
@@ -265,9 +276,38 @@ function trans:get(index)
     local s2 = self:concatFrames(index+1)
     local ar_index = index+self.recentMemSize-1
 
-    return s, self.a[ar_index], self.r[ar_index], s2, self.t[ar_index+1]
+    return index, s, self.a[ar_index], self.r[ar_index], s2, self.t[ar_index+1]
 end
 
+function trans:add_w(s, a, r, w, term)
+    assert(s, 'State cannot be nil')
+    assert(a, 'Action cannot be nil')
+    assert(r, 'Reward cannot be nil')
+	assert(w, 'Weight cannot be nil')
+
+    -- Incremenet until at full capacity
+    if self.numEntries < self.maxSize then
+        self.numEntries = self.numEntries + 1
+    end
+
+    -- Always insert at next index, then wrap around
+    self.insertIndex = self.insertIndex + 1
+    -- Overwrite oldest experience once at capacity
+    if self.insertIndex > self.maxSize then
+        self.insertIndex = 1
+    end
+
+    -- Overwrite (s,a,r,t) at insertIndex
+    self.s[self.insertIndex] = s:clone():float():mul(255)
+    self.a[self.insertIndex] = a
+    self.r[self.insertIndex] = r
+	self.w[self.insertIndex] = w
+    if term then
+        self.t[self.insertIndex] = 1
+    else
+        self.t[self.insertIndex] = 0
+    end
+end
 
 function trans:add(s, a, r, term)
     assert(s, 'State cannot be nil')
@@ -398,4 +438,11 @@ function trans:read(file)
         self.gpu_s  = self.buf_s:float():cuda()
         self.gpu_s2 = self.buf_s2:float():cuda()
     end
+end
+
+function trans:update_weights(indexi, delta)
+	for i = 1, indexi:storage():size() do
+		self.w[indexi[i]] = delta[i]
+		self.weight_threshold = self.threshold_estimator(delta[i])
+	end
 end
