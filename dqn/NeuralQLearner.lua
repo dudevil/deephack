@@ -53,7 +53,7 @@ function nql:__init(args)
     self.gpu            = args.gpu
 
     self.ncols          = args.ncols or 1  -- number of color channels in input
-    self.input_dims     = args.input_dims or {self.hist_len*self.ncols, 63, 63}
+    self.input_dims     = args.input_dims or {self.hist_len*self.ncols, 84, 84}
     self.preproc        = args.preproc  -- name of preprocessing network
     self.histType       = args.histType or "linear"  -- history type to use
     self.histSpacing    = args.histSpacing or 1
