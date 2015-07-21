@@ -62,6 +62,8 @@ function nql:__init(args)
 
     self.transition_params = args.transition_params or {}
 
+    self.use_thompson = args.use_thompson or false
+
     self.network    = args.network or self:createNetwork()
 
     -- check whether there is a network file
@@ -150,7 +152,10 @@ function nql:__init(args)
 
     if self.target_q then
         self.target_network = self.network:clone()
+        self.target_network:evaluating()
     end
+
+    self.evaluating = false
 end
 
 
@@ -302,6 +307,12 @@ function nql:perceive(reward, rawstate, terminal, testing, testing_ep)
     local state = self:preprocess(rawstate):float()
     local curState
 
+    if self.evaluating and (not testing) then
+        self.network:training()
+    elseif (not self.evaluating) and testing then
+        self.network:evaluate()
+    end
+
     if self.max_reward then
         reward = math.min(reward, self.max_reward)
     end
@@ -332,7 +343,12 @@ function nql:perceive(reward, rawstate, terminal, testing, testing_ep)
     -- Select action
     local actionIndex = 1
     if not terminal then
-        actionIndex = self:eGreedy(curState, testing_ep)
+        if args.use_thompson then
+            -- assumed that network has correct train? state which switches then 'testing' changes
+            actionIndex = self:greedy(curState)
+        else
+            actionIndex = self:eGreedy(curState, testing_ep)
+        end
     end
 
     self.transitions:add_recent_action(actionIndex)
