@@ -272,6 +272,13 @@ function nql:qLearnMinibatch()
     self.tmp:add(0.01)
     self.tmp:sqrt()
 
+    gamma_upd = delta:clone()
+    gamma_upd = gamma_upd:cmul(q2_max)
+    sign = function(x) return x<0 and -1 or x>0 and 1 or 0 end
+    upd = sign(tensor.mean(gamma_upd.mean())) * 0.0001
+    self.discount = self.discount + upd 
+
+
     -- accumulate update
     self.deltas:mul(0):addcdiv(self.lr, self.dw, self.tmp)
     self.w:add(self.deltas)
@@ -447,6 +454,7 @@ end
 
 
 function nql:report()
+    print(self.discount)
     print(get_weight_norms(self.network))
     print(get_grad_norms(self.network))
 end
