@@ -6,7 +6,7 @@ fi
 ENV=$1
 FRAMEWORK="alewrap"
 
-game_path="/home/ubuntu/DQN/Human_Level_Control_through_Deep_Reinforcement_Learning/roms/"
+game_path="/roms/"
 env_params="useRGB=true"
 agent="NeuralQLearner"
 n_replay=1
