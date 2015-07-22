@@ -344,7 +344,7 @@ function nql:perceive(reward, rawstate, terminal, testing, testing_ep)
     local currentFullState = self.transitions:get_recent()
 
     --Store transition s, a, r, s' and w
-    local w = calculate_weight(self.lastState, self.lastAction, reward, state, terminal)
+    local w = self.calculate_weight(self.lastState, self.lastAction, reward, state, terminal)
 
     if self.lastState and not testing then
         self.transitions:add_w(self.lastState, self.lastAction,
