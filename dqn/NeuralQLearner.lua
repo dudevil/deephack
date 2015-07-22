@@ -323,7 +323,7 @@ function nql:perceive(reward, rawstate, terminal, testing, testing_ep)
     local state = self:preprocess(rawstate):float()
     local curState
 
-    if self.evaluating and (not testing) then
+    if self.evaluating and (not testing) and self.use_thompson then
         self.network:training()
     elseif (not self.evaluating) and testing then
         self.network:evaluate()
