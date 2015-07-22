@@ -5,6 +5,7 @@ See LICENSE file for full terms of limited license.
 ]]
 
 require "initenv"
+require("cudnn")
 
 function create_network(args)
 
