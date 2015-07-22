@@ -15,10 +15,14 @@ function create_network(args)
     --- first convolutional layer
     local convLayer = cudnn.SpatialConvolution
 
+
     net:add(convLayer(args.hist_len*args.ncols, args.n_units[1],
                         args.filter_size[1], args.filter_size[1],
                         args.filter_stride[1], args.filter_stride[1],1))
-    net:add(args.nl())
+
+    net:add(nn.SpatialBatchNormalization(args.n_units[1],1e-3))
+
+    net:add(args.nl(true))
 
     -- Add convolutional layers
     for i=1,(#args.n_units-1) do
@@ -26,7 +30,10 @@ function create_network(args)
         net:add(convLayer(args.n_units[i], args.n_units[i+1],
                             args.filter_size[i+1], args.filter_size[i+1],
                             args.filter_stride[i+1], args.filter_stride[i+1]))
-        net:add(args.nl())
+
+        net:add(nn.SpatialBatchNormalization(args.n_units[i+1],1e-3))
+
+        net:add(args.nl(true))
     end
 
     local nel
@@ -42,6 +49,9 @@ function create_network(args)
 
     -- fully connected layer
     net:add(nn.Linear(nel, args.n_hid[1]))
+
+    net:add(nn.BatchNormalization(args.n_hid[1],1e-3))
+
     net:add(args.nl())
     local last_layer_size = args.n_hid[1]
 
@@ -49,6 +59,7 @@ function create_network(args)
         -- add Linear layer
         last_layer_size = args.n_hid[i+1]
         net:add(nn.Linear(args.n_hid[i], last_layer_size))
+        net:add(nn.BatchNormalization(args.n_hid[i+1],1e-3))
         net:add(args.nl())
     end
 
