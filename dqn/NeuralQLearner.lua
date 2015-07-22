@@ -346,7 +346,7 @@ function nql:perceive(reward, rawstate, terminal, testing, testing_ep)
 
     if self.lastState and not testing then
         --Store transition s, a, r, s' and w
-        local w = self:calculate_weight(self.lastState, self.lastAction, reward, state, terminal)
+        local w = self:calculate_weight(self.lastState, self.lastAction, reward, state, self.lastTerminal)
         self.transitions:add_w(self.lastState, self.lastAction,
                                reward, w, self.lastTerminal)
     end
