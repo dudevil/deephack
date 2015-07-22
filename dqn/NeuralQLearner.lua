@@ -63,7 +63,9 @@ function nql:__init(args)
     self.transition_params = args.transition_params or {}
 
     self.use_thompson = args.use_thompson or false
-    self.uncertainty_T = args.uncertainty_T or 5
+    self.uncertainty_T = args.uncertainty_T or 0
+
+    self.transition_params.wsampling = self.uncertainty_T > 0
 
     self.network    = args.network or self:createNetwork()
 
@@ -280,7 +282,10 @@ function nql:qLearnMinibatch()
 
     -- accumulate update
     self.deltas:mul(0):addcdiv(self.lr, self.dw, self.tmp)
-    self.w:add(self.deltas)
+
+    --recalculate weights
+    local new_weights = self:calculate_weight(s, a, r, s2, term)
+    self.transitions:update_weights(indexi, new_weights)
 end
 
 
@@ -295,8 +300,18 @@ end
 
 
 function nql:compute_validation_statistics()
+    if not self.evaluating then
+        -- getQUpdate cannot be evaluated then network in evaluate mode
+        self.network:evaluate()
+    end
+
     local targets, delta, q2_max = self:getQUpdate{s=self.valid_s,
-        a=self.valid_a, r=self.valid_r, s2=self.valid_s2, term=self.valid_term}
+        a=self.valid_a, r=self.valid_r, s2=self.valid_s2, term=self.valid_term }
+
+    if not self.evaluating then
+        -- return state
+        self.network:training()
+    end
 
     self.v_avg = self.q_max * q2_max:mean()
     self.tderr_avg = delta:clone():abs():mean()
@@ -498,6 +513,11 @@ end
 
 
 function nql:calculate_weight(s, a, r, s2, terminal)
+    if self.uncertainty_T == 0 then
+        local x = torch.Tensor(a.size())
+        return
+    end
+
     local currUncertainty = self:uncertainty(s)[a]
     local futureTotalUncertainty, futureQ = self:uncertainty(s2)
     local _, bestFutureActions = torch.min(futureQ)

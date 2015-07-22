@@ -21,6 +21,7 @@ function trans:__init(args)
     self.zeroFrames = args.zeroFrames or 1
     self.nonTermProb = args.nonTermProb or 1
     self.nonEventProb = args.nonEventProb or 1
+    self.wsampling = args.wsampling or false
     self.gpu = args.gpu
     self.numEntries = 0
     self.insertIndex = 0
@@ -139,7 +140,7 @@ function trans:sample_one()
             valid = false
         end
 		w = self.w[index+self.recentMemSize-1]
-		if w < self.weight_threshold then
+		if self.wsampling and w < self.weight_threshold then
 			valid = false
 		end
         if self.nonEventProb < 1 and self.t[index+self.recentMemSize] == 0 and
@@ -416,7 +417,7 @@ function trans:read(file)
 end
 
 function trans:update_weights(indexi, delta)
-	for i = 1, indexi:storage():size() do
+	for i = 1, indexi:size(1) do
 		self.w[indexi[i]] = delta[i]
 		self.weight_threshold = self.threshold_estimator(delta[i])
 	end
