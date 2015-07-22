@@ -12,7 +12,7 @@ function create_network(args)
     net:add(nn.Reshape(unpack(args.input_dims)))
 
     --- first convolutional layer
-    local convLayer = nn.SpatialConvolution
+    local convLayer = cudnn.SpatialConvolution
 
     net:add(convLayer(args.hist_len*args.ncols, args.n_units[1],
                         args.filter_size[1], args.filter_size[1],
