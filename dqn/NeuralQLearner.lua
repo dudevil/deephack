@@ -519,8 +519,8 @@ function nql:calculate_weight(s, a, r, s2, terminal)
 
     local currUncertainty = self:uncertainty(s)[a]
     local futureTotalUncertainty, futureQ = self:uncertainty(s2)
-    local _, bestFutureActions = torch.min(futureQ)
+    local _, bestFutureActions = torch.max(futureQ)
     local futureUncertainty = futureTotalUncertainty[bestFutureActions]
 
-    return currUncertainty / (1+futureUncertainty)
+    return currUncertainty
 end
