@@ -279,6 +279,7 @@ function trans:get(index)
     return index, s, self.a[ar_index], self.r[ar_index], s2, self.t[ar_index+1]
 end
 
+
 function trans:add_w(s, a, r, w, term)
     assert(s, 'State cannot be nil')
     assert(a, 'Action cannot be nil')
@@ -304,34 +305,6 @@ function trans:add_w(s, a, r, w, term)
     self.a[self.insertIndex] = a
     self.r[self.insertIndex] = r
 	self.w[self.insertIndex] = w
-    if term then
-        self.t[self.insertIndex] = 1
-    else
-        self.t[self.insertIndex] = 0
-    end
-end
-
-function trans:add(s, a, r, term)
-    assert(s, 'State cannot be nil')
-    assert(a, 'Action cannot be nil')
-    assert(r, 'Reward cannot be nil')
-
-    -- Incremenet until at full capacity
-    if self.numEntries < self.maxSize then
-        self.numEntries = self.numEntries + 1
-    end
-
-    -- Always insert at next index, then wrap around
-    self.insertIndex = self.insertIndex + 1
-    -- Overwrite oldest experience once at capacity
-    if self.insertIndex > self.maxSize then
-        self.insertIndex = 1
-    end
-
-    -- Overwrite (s,a,r,t) at insertIndex
-    self.s[self.insertIndex] = s:clone():float():mul(255)
-    self.a[self.insertIndex] = a
-    self.r[self.insertIndex] = r
     if term then
         self.t[self.insertIndex] = 1
     else

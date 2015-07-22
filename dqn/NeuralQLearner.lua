@@ -328,10 +328,12 @@ function nql:perceive(reward, rawstate, terminal, testing, testing_ep)
 
     local currentFullState = self.transitions:get_recent()
 
-    --Store transition s, a, r, s'
+    --Store transition s, a, r, s' and w
+    local w = calculate_weight(self.lastState, self.lastAction, reward, state, terminal)
+
     if self.lastState and not testing then
-        self.transitions:add(self.lastState, self.lastAction, reward,
-                             self.lastTerminal, priority)
+        self.transitions:add_w(self.lastState, self.lastAction,
+                               reward, self.lastTerminal, w)
     end
 
     if self.numSteps == self.learn_start+1 and not testing then
@@ -469,7 +471,8 @@ function nql:report()
 end
 
 
-function nql:uncertainty(state, action_id)
+-- return uncertainty and mean
+function nql:uncertainty(state)
     if state:dim() == 2 then
         assert(false, 'Input must be at least 3D')
         state = state:resize(1, state:size(1), state:size(2))
@@ -478,7 +481,27 @@ function nql:uncertainty(state, action_id)
         state = state:cuda()
     end
 
-    for i=1,self.uncertainty_T do
-        self.network:forward(state)
+    local x = self.network:forward(state)
+    local max = x:clone()
+    local min = x:clone()
+    local mean = x:clone()
+
+    for i=2,self.uncertainty_T do
+        x = self.network:forward(state)
+        max:max(x)
+        min:min(x)
+        mean:add(x)
     end
+    mean:div(T)
+    return max-min, mean
+end
+
+
+function nql:calculate_weight(s, a, r, s2, terminal)
+    local currUncertainty = self:uncertainty(s)[a]
+    local futureTotalUncertainty, futureQ = self:uncertainty(s2)
+    local _, bestFutureActions = torch.min(futureQ)
+    local futureUncertainty = futureTotalUncertainty[bestFutureActions]
+
+    return currUncertainty / (1+futureUncertainty)
 end
