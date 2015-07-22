@@ -285,7 +285,7 @@ end
 
 
 function nql:sample_validation_data()
-    local s, a, r, s2, term = self.transitions:sample(self.valid_size)
+    local index, s, a, r, s2, term = self.transitions:sample(self.valid_size)
     self.valid_s    = s:clone()
     self.valid_a    = a:clone()
     self.valid_r    = r:clone()
