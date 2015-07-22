@@ -343,12 +343,12 @@ function nql:perceive(reward, rawstate, terminal, testing, testing_ep)
 
     local currentFullState = self.transitions:get_recent()
 
-    --Store transition s, a, r, s' and w
-    local w = self.calculate_weight(self.lastState, self.lastAction, reward, state, terminal)
 
     if self.lastState and not testing then
+        --Store transition s, a, r, s' and w
+        local w = self:calculate_weight(self.lastState, self.lastAction, reward, state, terminal)
         self.transitions:add_w(self.lastState, self.lastAction,
-                               reward, self.lastTerminal, w)
+                               reward, w, self.lastTerminal)
     end
 
     if self.numSteps == self.learn_start+1 and not testing then
@@ -514,8 +514,11 @@ end
 
 function nql:calculate_weight(s, a, r, s2, terminal)
     if self.uncertainty_T == 0 then
-        local x = torch.Tensor(a.size())
-        return
+        if type(a) == 'number' then
+            return 1
+        else
+            return torch.Tensor(a:size()):zero()
+        end
     end
 
     local currUncertainty = self:uncertainty(s)[a]
