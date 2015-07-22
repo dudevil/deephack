@@ -285,6 +285,8 @@ function trans:add_w(s, a, r, w, term)
     assert(r, 'Reward cannot be nil')
 	assert(w, 'Weight cannot be nil')
 
+    self.weight_threshold = self.threshold_estimator(w) -- update weight
+
     -- Incremenet until at full capacity
     if self.numEntries < self.maxSize then
         self.numEntries = self.numEntries + 1
