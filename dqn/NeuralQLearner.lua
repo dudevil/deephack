@@ -361,12 +361,8 @@ function nql:perceive(reward, rawstate, terminal, testing, testing_ep)
     -- Select action
     local actionIndex = 1
     if not terminal then
-        if self.use_thompson then
-            -- assumed that network has correct train? state which switches then 'testing' changes
-            actionIndex = self:greedy(curState)
-        else
-            actionIndex = self:eGreedy(curState, testing_ep)
-        end
+        -- assumed that network has correct train? state which switches then 'testing' changes
+        actionIndex = self:eGreedy(curState, testing_ep)
     end
 
     self.transitions:add_recent_action(actionIndex)
