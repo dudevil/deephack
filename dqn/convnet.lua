@@ -22,7 +22,7 @@ function create_network(args)
 
     net:add(nn.SpatialBatchNormalization(args.n_units[1],1e-3))
 
-    net:add(cudnn.ReLu(true))
+    net:add(args.nl(true))
 
     -- Add convolutional layers
     for i=1,(#args.n_units-1) do
@@ -33,7 +33,7 @@ function create_network(args)
 
         net:add(nn.SpatialBatchNormalization(args.n_units[i+1],1e-3))
 
-        net:add(cudnn.ReLu(true))
+        net:add(args.nl(true))
     end
 
     local nel
@@ -52,7 +52,7 @@ function create_network(args)
 
     net:add(nn.BatchNormalization(args.n_hid[1],1e-3))
 
-    net:add(cudnn.ReLu())
+    net:add(args.nl())
     local last_layer_size = args.n_hid[1]
 
     for i=1,(#args.n_hid-1) do
@@ -60,7 +60,7 @@ function create_network(args)
         last_layer_size = args.n_hid[i+1]
         net:add(nn.Linear(args.n_hid[i], last_layer_size))
         net:add(nn.BatchNormalization(args.n_hid[i+1],1e-3))
-        net:add(cudnn.ReLu())
+        net:add(args.nl())
     end
 
     -- add the last fully connected layer (to actions)
