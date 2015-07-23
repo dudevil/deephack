@@ -5,6 +5,7 @@ See LICENSE file for full terms of limited license.
 ]]
 
 require 'convnet'
+require("cudnn")
 
 return function(args)
     args.n_units        = {32, 64, 64}
