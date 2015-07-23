@@ -11,7 +11,7 @@ return function(args)
     args.filter_size    = {8, 4, 3}
     args.filter_stride  = {4, 2, 1}
     args.n_hid          = {512}
-    args.nl             = nn.Rectifier
+    args.nl             = cudnn.ReLu
 
     return create_network(args)
 end
