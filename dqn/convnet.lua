@@ -17,7 +17,7 @@ function conv_layer_weights_initialization(nInputPlane, nOutputPlane, kW, kH, dW
 
     convLayer.weights:normal(0, math.sqrt(2/nOutputPlane*kW*kH))
 
-    return conLayer
+    return convLayer
 end
 
 --function linear_weights_initialization(input, output, mean, std)
