@@ -7,16 +7,38 @@ See LICENSE file for full terms of limited license.
 require "initenv"
 require "cudnn"
 
+function conv_layer_weights_initialization(nInputPlane, nOutputPlane, kW, kH, dW, dH, padW)
+
+    padW = padW or 0
+
+    local convLayer = cudnn.SpatialConvolution
+
+    convLayer(nInputPlane, nOutputPlane, kW, kH, dW, dH, padW)
+
+    convLayer.weights:normal(0, math.sqrt(2/nOutputPlane*kW*kH))
+
+    return convLayer
+end
+
+--function linear_weights_initialization(input, output, mean, std)
+--    linear = nn.Linear(input, output)
+--
+--    linear.weight:normal(mean,std)
+--    linear.bias:normal(mean,std)
+--
+--    return linear
+--end
+
+
 function create_network(args)
 
     local net = nn.Sequential()
     net:add(nn.Reshape(unpack(args.input_dims)))
 
     --- first convolutional layer
---    local convLayer = nn.SpatialConvolution
-    local convLayer = cudnn.SpatialConvolution
+    --local convLayer = nn.SpatialConvolution
 
-    net:add(convLayer(args.hist_len*args.ncols, args.n_units[1],
+    net:add(conv_layer_weights_initialization(args.hist_len*args.ncols, args.n_units[1],
                         args.filter_size[1], args.filter_size[1],
                         args.filter_stride[1], args.filter_stride[1],1))
     net:add(args.nl())
@@ -24,7 +46,7 @@ function create_network(args)
     -- Add convolutional layers
     for i=1,(#args.n_units-1) do
         -- second convolutional layer
-        net:add(convLayer(args.n_units[i], args.n_units[i+1],
+        net:add(conv_layer_weights_initialization(args.n_units[i], args.n_units[i+1],
                             args.filter_size[i+1], args.filter_size[i+1],
                             args.filter_stride[i+1], args.filter_stride[i+1]))
         net:add(args.nl())
