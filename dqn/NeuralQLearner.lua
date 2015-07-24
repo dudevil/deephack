@@ -251,13 +251,14 @@ function nql:qLearnMinibatch()
     local s, a, r, s2, term = self.transitions:sample(self.minibatch_size)
 
     -- normalize reward
-
+    -- default switch off
     if self.reward_normalize then
         self.max_r = self.max_r*self.lambda + (1-self.lambda)*torch.max(r)
-        for i=1,#r:storage()
-            do
-            if r[i] > 0 then r[i] = r[i]/max_r end
+        for i=1,r:size()[1] do
+            if r[i] > 0 then
+                r[i] = r[i]/self.max_r
             end
+        end
     end
     local targets, delta, q2_max = self:getQUpdate{s=s, a=a, r=r, s2=s2,
         term=term, update_qmax=true}
