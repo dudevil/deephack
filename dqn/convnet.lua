@@ -13,11 +13,11 @@ function conv_layer_weights_initialization(nInputPlane, nOutputPlane, kW, kH, dW
 
     local convLayer = cudnn.SpatialConvolution
 
-    convLayer(nInputPlane, nOutputPlane, kW, kH, dW, dH, padW)
+    local layer = convLayer(nInputPlane, nOutputPlane, kW, kH, dW, dH, padW)
 
-    convLayer.weights:normal(0, math.sqrt(2/nOutputPlane*kW*kH))
+    layer.weights:normal(0, math.sqrt(2/nOutputPlane*kW*kH))
 
-    return convLayer
+    return layer
 end
 
 --function linear_weights_initialization(input, output, mean, std)
