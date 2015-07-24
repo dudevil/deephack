@@ -85,8 +85,15 @@ function nql:__init(args)
         end
     else
         print('Creating Agent Network from ' .. self.network)
+        print('Creating Agent Network from ' .. self.network)
         self.network = err
         self.network = self:network()
+        print("!!!NETWORK!!!")
+        local err_msg, exp = pcall(torch.load, "/mnt1/test_models/seaquest10.t7")
+        print(exp.best_model)
+        self.network.modules[2].weight = exp.best_model.modules[2].weight
+        self.network.modules[4].weight = exp.best_model.modules[4].weight
+        self.network.modules[6].weight = exp.best_model.modules[6].weight
     end
 
     if self.gpu and self.gpu >= 0 then
