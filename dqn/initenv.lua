@@ -98,6 +98,9 @@ end
 function setup(_opt)
     assert(_opt)
 
+    ale_rom_name = _opt.env    
+    ale_login = _opt.ale_login
+    ale_pass = _opt.ale_pass
     --preprocess options:
     --- convert options strings to tables
     _opt.pool_frms = str_to_table(_opt.pool_frms)
