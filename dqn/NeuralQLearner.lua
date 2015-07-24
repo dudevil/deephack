@@ -87,7 +87,7 @@ function nql:__init(args)
         if self.best and exp.best_model then
             self.network = exp.best_model
         else
-            self.network = exp.model
+            self.network = exp.best_model
         end
     else
         print('Creating Agent Network from ' .. self.network)
